@@ -2,6 +2,7 @@ from game import Game
 
 
 def main():
+    print("Enide Djender - Arnaud Endignous")
     print("Bienvenue au Texas Hold'em Poker !")
     player_names = []
 
