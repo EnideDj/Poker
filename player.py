@@ -7,7 +7,7 @@ class Player:
 
     def bet_chips(self, amount):
         if amount > self.chips:
-            raise ValueError("Not enough chips")
+            raise ValueError("Pas assez de jetons")
         self.chips -= amount
         return amount
 
@@ -15,7 +15,7 @@ class Player:
         self.is_active = False
 
     def check(self):
-        return True  
+        return True
 
     def __str__(self):
         return f"{self.name} - Jetons : {self.chips} - Cartes : {', '.join(map(str, self.cards))}"
