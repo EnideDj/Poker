@@ -6,7 +6,7 @@ from player import Player
 
 class Game:
     def __init__(self, players):
-        self.table = Board()
+        self.board = Board()
 
         self.players = [Player(name, 1000) for name in players]
         self.dealerIndex = 0
@@ -23,8 +23,8 @@ class Game:
         self.blind_betting()
 
         for player in self.players:
-            player.cards = self.table.generer_cartes(2)
-            player.treyCards = self.table.generer_treys_cartes(2)
+            player.cards = self.board.generer_cartes(2)
+            player.treyCards = self.board.generer_treys_cartes(2)
 
         print("\n--- Cartes des joueurs ---")
         for player in self.players:
@@ -35,7 +35,7 @@ class Game:
 
         print("Cartes distribuées.")
         print("\n--- État initial de la table ---")
-        print(self.table)
+        print(self.board)
 
         print("\n===> Phase avant le flop : Mise pré-flop <===")
         self.pre_flop_betting()
