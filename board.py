@@ -1,4 +1,3 @@
-import random
 
 from treys import Deck
 
@@ -41,22 +40,8 @@ class Board:
         Card.print_pretty_cards([*self.board[0:5]])
 
 
-    def generer_cartes(self, nombre):
-        return [self.deck.pop() for _ in range(nombre)]
-
-    def generer_treys_cartes(self, nombre):
-        return self.treysDeck.draw(nombre)
-
     def add_to_pot(self, amount):
         self.pot += amount
-
-    def add_cards(self, phase):
-        if phase == "flop" and len(self.board) == 0:
-            self.board.extend(self.generer_cartes(3))
-        elif phase == "turn" and len(self.board) == 3:
-            self.board.extend(self.generer_cartes(1))
-        elif phase == "river" and len(self.board) == 4:
-            self.board.extend(self.generer_cartes(1))
 
 
     def __str__(self):

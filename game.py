@@ -1,4 +1,3 @@
-from cmath import phase
 
 from treys import Card, Evaluator
 
@@ -133,17 +132,6 @@ class Game:
                 print(f"{player.name} se couche.")
                 return "FOLD"
 
-                '''
-                elif action == 'c':
-                # TODO: check chips
-                if amount_to_follow > player.chips:
-                    print("Vous n'avez pas assez de jetons. Réessayez")
-                    continue
-                player.bet_chips(amount_to_follow)
-                {player.name: 0 for player in self.players}[player.name] += amount_to_follow
-                self.pot += amount_to_follow
-                return True
-                '''
             else:
                 print("Action invalide. Veuillez réessayer.")
                 return False
@@ -210,7 +198,7 @@ class Game:
             print("Les cartes du joueur " + player.name)
             Card.print_pretty_cards(player.treyCards)
 
-    def showdown(self, isRoundComplete=True):
+    def showdown(self):
         print("\nPhase de Showdown !")
 
         evaluator = Evaluator()
