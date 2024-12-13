@@ -1,5 +1,6 @@
 from game import Game
 
+
 def main():
     print("Bienvenue au Texas Hold'em Poker !")
     player_names = []
@@ -19,6 +20,7 @@ def main():
 
     game = Game(player_names)
     game.start_game()
+
 
 if __name__ == "__main__":
     main()

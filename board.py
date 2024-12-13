@@ -16,7 +16,17 @@ class Board:
         self.pot = 0
 
         # Deprecated
-        self.old_deck = self._creer_deck()
+       # self.old_deck = self._creer_deck()
+
+    def print_cards(self, phase):
+        if phase == "flop":
+            self.print_flop()
+        elif phase == "turn":
+            self.print_turn()
+        elif phase == "river":
+            self.print_river()
+
+
 
     def print_flop(self):
         # Printing the three first cards
@@ -24,16 +34,12 @@ class Board:
 
     def print_turn(self):
         # Printing the three first cards
-        Card.print_pretty_cards([*self.board[3:4]])
+        Card.print_pretty_cards([*self.board[0:4]])
 
     def print_river(self):
         # Printing the three last cards
-        Card.print_pretty_cards([*self.board[4:5]])
+        Card.print_pretty_cards([*self.board[0:5]])
 
-    def _creer_deck(self):
-        deck = [Card(v, s) for v in Card.valeurs for s in Card.sortes]
-        random.shuffle(deck)
-        return deck
 
     def generer_cartes(self, nombre):
         return [self.deck.pop() for _ in range(nombre)]
