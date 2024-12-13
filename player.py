@@ -7,20 +7,20 @@ class Player:
         self.chips = chips
         self.cards = []
         self.treyCards = Deck().draw(2)
-        self.is_active = True
+        self.is_fold = True
+        self.currentBet = 0
 
     def bet_chips(self, amount):
-        if amount > self.chips:
-            raise ValueError("Not enough chips")
-        self.chips -= amount
-        return amount
+        if not amount > self.chips:
+            self.chips -= amount
+            self.currentBet += amount
+            return amount
 
     def fold(self):
-        self.is_active = False
+        self.is_fold = False
 
-    @staticmethod
-    def check():
-        return True  
+    def reset_current_bet(self):
+        self.currentBet = 0
 
     def __str__(self):
         return f"{self.name} - Jetons : {self.chips} - Cartes : {', '.join(map(str, self.cards))}"
