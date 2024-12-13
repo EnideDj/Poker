@@ -1,8 +1,12 @@
+from treys import Deck
+
+
 class Player:
     def __init__(self, name, chips):
         self.name = name
         self.chips = chips
         self.cards = []
+        self.treyCards = Deck().draw(2)
         self.is_active = True
 
     def bet_chips(self, amount):
@@ -14,7 +18,8 @@ class Player:
     def fold(self):
         self.is_active = False
 
-    def check(self):
+    @staticmethod
+    def check():
         return True  
 
     def __str__(self):
