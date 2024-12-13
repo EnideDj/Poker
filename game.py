@@ -1,6 +1,6 @@
 from cmath import phase
 
-from treys import Card
+from treys import Card, Evaluator
 
 from board import Board
 from player import Player
@@ -48,6 +48,9 @@ class Game:
         phase_index = 0
         phases = ["pré-flop", "flop", "turn", "river"]
         while not self.round_over and phase_index < len(phases):
+            # Resetting player
+            for player in self.players:
+                player.is_active = True
             phase = phases[phase_index]
             print(f"\n===> Phase actuelle : {phase} <===")
             self.print_player_cards()
@@ -85,97 +88,94 @@ class Game:
     def bets_balanced(self):
         active_players = [p for p in self.players if p.is_active]
         contributions = [self.get_current_bets()[p.name] for p in active_players]
-        return len(set(contributions)) == 1
+        # If all the bets are equal, then the length of the associated is 1
+        # We also must verify that we go to the next phase if
+        return len(set(contributions)) == 1 and len(self.players) - len(active_players) < 2
 
-    def handle_action(self, player, action, amount_to_folllow):
-        if action == 'b':
-            try:
-                amount = int(input(f"Combien voulez-vous miser ? (minimum {amount_to_folllow}) : "))
-            except ValueError:
-                print("Veuillez entrer un montant valide.")
+    def handle_action(self, player, action, amount_to_follow):
+        while True:
+            if action == 'b':
+                try:
+                    amount = int(input(f"Combien voulez-vous miser ? (minimum {amount_to_follow}) : "))
+                except ValueError:
+                    print("Veuillez entrer un montant valide.")
+                    continue
+                    # return False
+
+                if amount < amount_to_follow:
+                    print(f"Erreur : Vous devez suivre au moins {amount_to_follow}.")
+                    continue
+                    # return False
+                if amount > player.chips:
+                    print("Vous n'avez pas assez de jetons.")
+                    continue
+                     # return False
+
+                player.bet_chips(amount)
+                self.get_current_bets()[player.name] += amount
+                self.pot += amount
+
+                if amount > amount_to_follow:
+                    self.min_bet = self.get_current_bets()[player.name]
+                    print(f"{player.name} relance à {amount} jetons.")
+                else:
+                    print(f"{player.name} suit avec {amount} jetons.")
+                return True
+
+            elif action == 'f':
+                player.fold()
+                print(f"{player.name} se couche.")
                 return False
 
-            if amount < amount_to_folllow:
-                print(f"Erreur : Vous devez suivre au moins {amount_to_folllow}.")
-                return False
-            if amount > player.chips:
-                print("Vous n'avez pas assez de jetons.")
-                return False
+            elif action == 'c' and amount_to_follow == 0:
+                print(f"{player.name} choisit de checker.")
+                return True
 
-            player.bet_chips(amount)
-            self.get_current_bets()[player.name] += amount
-            self.pot += amount
-
-            if amount > amount_to_folllow:
-                self.min_bet = self.get_current_bets()[player.name]
-                print(f"{player.name} relance à {amount} jetons.")
             else:
-                print(f"{player.name} suit avec {amount} jetons.")
-            return True
-
-        elif action == 'f':
-            player.fold()
-            print(f"{player.name} se couche.")
-            return True
-
-        elif action == 'c' and amount_to_folllow == 0:
-            print(f"{player.name} choisit de checker.")
-            return True
-
-        else:
-            print("Action invalide. Veuillez réessayer.")
-            return False
+                print("Action invalide. Veuillez réessayer.")
+                return False
 
 
     def get_active_players(self):
         return [p for p in self.players if p.is_active]
 
     def handle_bet(self, phase):
-        while True:
 
-            # If only one player is active, it wins the round
-            if len(self.get_active_players()) == 1:
-                winner = self.get_active_players()[0]
-                print(f"{winner.name} gagne car tous les autres se sont couchés.")
-                winner.chips += self.pot
-                self.pot = 0
+        # Asking every player what to do
+        for player in self.players:
+            # Minimal amount to follow
+            amount_to_follow = max(0, self.min_bet - self.get_current_bets()[player.name])
+            print(f"{player.name}, vous avez {player.chips} jetons.")
+            print(f"Pot total : {self.pot} jetons. Votre contribution : {self.get_current_bets()[player.name]} jetons.")
+            print(f"Montant à suivre : {amount_to_follow}")
+
+            if amount_to_follow > 0:
+                action = input("Voulez-vous [B]et ou [F]old ? ").strip().lower()
+            else:
+                # If the amount to follow is above 0, we can check too
+                action = input("Voulez-vous [B]et, [F]old, ou [C]heck ? ").strip().lower()
+
+            self.handle_action(player, action, amount_to_follow)
+            ##if not self.handle_action(player, action, amount_to_follow):
+            ##    continue
+
+        # If only one player is active, it wins the round
+        if len(self.get_active_players()) == 1:
+            winner = self.get_active_players()[0]
+            print(f"{winner.name} gagne car tous les autres se sont couchés.")
+            winner.chips += self.pot
+            self.pot = 0
+            self.round_over = True
+            if phase == "pré-flop":
                 self.round_over = True
-                if phase == "pré-flop":
-                    self.round_over = True
-                break
-
-            # If multiple active players
-            index = 0
-            while len(self.get_active_players()) > 1 and index < len(self.get_active_players()):
-                player = self.get_active_players()[index]
-
-                # Minimal amount to follow
-                amount_to_follow = max(0, self.min_bet - self.get_current_bets()[player.name])
-                print(f"{player.name}, vous avez {player.chips} jetons.")
-                print(f"Pot total : {self.pot} jetons. Votre contribution : {self.get_current_bets()[player.name]} jetons.")
-                print(f"Montant à suivre : {amount_to_follow}")
-
-                if amount_to_follow > 0:
-                    action = input("Voulez-vous [B]et ou [F]old ? ").strip().lower()
-                else:
-                    # If the amount to follow is above 0, we can check too
-                    action = input("Voulez-vous [B]et, [F]old, ou [C]heck ? ").strip().lower()
-
-                if not self.handle_action(player, action, amount_to_follow):
-                    continue
-
-                # If the player has fold, we continue
-                if not player.is_active:
-                    # In this case, we break
-                    break
-
-                index += 1
-
+        else:
+            # We go to the next phase if
+            # 1 - There is more than one active player (if the other folded the player wins)
+            # 2 - All the players have chosen their action
             if len(self.get_active_players()) > 1 and self.bets_balanced():
+                if phase == 'pré-flop':
+                    print("Les mises sont équilibrées. Passons à la prochaine phase")
                 print("Mises équilibrées")
-                break
-
-
 
 
 
@@ -187,9 +187,17 @@ class Game:
 
     def showdown(self):
         print("\nPhase de Showdown !")
+        '''
+        >>> p1_score = evaluator.evaluate(board, player1_hand)
+        >>> p2_score = evaluator.evaluate(board, player2_hand)
+        >>> p1_class = evaluator.get_rank_class(p1_score)
+        >>> p2_class = evaluator.get_rank_class(p2_score)
+        '''
 
+        evaluator = Evaluator()
+        scores = [evaluator.evaluate(self.board.board, player.treyCards) for player in self.players]
+        ranks = [evaluator.class_to_string(evaluator.get_rank_class(score)) for score in scores]
 
-'''
-    Pre flop ne fonctionne que si on bet. Fold mal fait
+        for i in range(len(scores)):
+            print(f"Player {self.players[i]} hand rank = {scores[i]} ({ranks[i]})\n")
 
-'''
