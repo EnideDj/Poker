@@ -1,27 +1,38 @@
-from table import Table
+from treys import Card
+
+from board import Board
 from player import Player
+
 
 class Game:
     def __init__(self, players):
-        self.table = Table()
+        self.table = Board()
+
         self.players = [Player(name, 1000) for name in players]
+        self.dealerIndex = 0
+        self.smallBlindIndex = 0
+        self.bigBlindIndex = 0
         self.min_bet = 0
         self.pot = 0
         self.round_over = False
-        self.current_bets = {player.name: 0 for player in self.players} 
+        self.current_bets = {player.name: 0 for player in self.players}
 
     def start_game(self):
         print("Début de la partie...")
-        
+
         self.blind_betting()
 
         for player in self.players:
-            player.cards = self.table._generer_cartes(2)
-        
+            player.cards = self.table.generer_cartes(2)
+            player.treyCards = self.table.generer_treys_cartes(2)
+
         print("\n--- Cartes des joueurs ---")
         for player in self.players:
-            print(f"Les cartes : {', '.join(map(str, player.cards))} du joueur {player.name},")
-        
+            # print(
+            #   f"Les cartes : {', '.join(map(str, Card.int_to_pretty_str(player.treyCards)))} du joueur {player.name},")
+            print("Les cartes du joueur " + player.name)
+            Card.print_pretty_cards(player.treyCards)
+
         print("Cartes distribuées.")
         print("\n--- État initial de la table ---")
         print(self.table)
@@ -58,16 +69,12 @@ class Game:
         self.showdown()
 
     def blind_betting(self):
-        # Small blind and big blind setup
-        if len(self.players) < 2:
-            print("Not enough players to start the game!")
-            return
-        
+
         # The first player posts small blind, the second player posts big blind
-        self.players[0].bet_chips(10)  # Small blind
+        self.players[self.smallBlindIndex].bet_chips(10)  # Small blind
         self.current_bets[self.players[0].name] += 10  # Track contribution to pot
-        
-        self.players[1].bet_chips(20)  # Big blind
+
+        self.players[self.bigBlindIndex].bet_chips(20)  # Big blind
         self.current_bets[self.players[1].name] += 20  # Track contribution to pot
 
         self.pot += 30  # Add blinds to the pot
@@ -78,27 +85,28 @@ class Game:
         self.min_bet = 20  # The big blind is 20, so the minimum bet is now 20.
 
     def pre_flop_betting(self):
-        while True: 
+        while True:
             for player in self.players:
-                if not player.is_active:  
+                if not player.is_active:
                     continue
 
                 montant_a_suivre = self.min_bet - self.current_bets[player.name]
 
-                while True:  
+                while True:
                     print(f"{player.name}, vous avez {player.chips} jetons.")
                     print(f"Pot total : {self.pot} jetons")
                     print(f"Votre contribution au pot : {self.current_bets[player.name]} jetons")
                     print(f"Montant à suivre : {montant_a_suivre}")
 
-                    if montant_a_suivre > 0:  
+                    if montant_a_suivre > 0:
                         action = input("Voulez-vous [B]et ou [F]old ? ").strip().lower()
-                    else:  
+                    else:
                         action = input("Voulez-vous [B]et, [F]old, ou [C]heck ? ").strip().lower()
 
-                    if action == 'b':  
+                    if action == 'b':
                         try:
-                            amount = int(input(f"Combien voulez-vous miser ? (minimum {montant_a_suivre if montant_a_suivre > 0 else 1}) : "))
+                            amount = int(input(
+                                f"Combien voulez-vous miser ? (minimum {montant_a_suivre if montant_a_suivre > 0 else 1}) : "))
                         except ValueError:
                             print("Veuillez entrer un montant valide.")
                             continue
@@ -116,16 +124,16 @@ class Game:
                         player.bet_chips(amount)
                         self.current_bets[player.name] += amount
                         self.pot += amount
-                        break  
+                        break
 
                     elif action == 'f':
                         player.fold()
                         print(f"{player.name} se couche.")
-                        break  
+                        break
 
-                    elif action == 'c' and montant_a_suivre == 0:  
+                    elif action == 'c' and montant_a_suivre == 0:
                         print(f"{player.name} choisit de checker.")
-                        break 
+                        break
 
                     else:
                         print("Action invalide. Veuillez choisir une action valide.")
@@ -137,9 +145,9 @@ class Game:
                 self.round_over = True
                 return
             if len(set(contributions)) == 1:
-                break  
+                break
         print(f"Fin de la phase de mise. Pot total : {self.pot} jetons")
-        
+
     def handle_betting_round(self, phase_name=""):
         print(f"\n=== Phase actuelle : {phase_name} ===")
         while True:
@@ -164,9 +172,9 @@ class Game:
                     break
 
             print(f"Fin de la phase de mise. Pot total : {self.pot} jetons.")
-        
+
     def handle_action(self, player, action, montant_a_suivre):
-        if action == 'b':  
+        if action == 'b':
             try:
                 amount = int(input(f"Combien voulez-vous miser ? (minimum {montant_a_suivre}) : "))
             except ValueError:
@@ -202,7 +210,7 @@ class Game:
         else:
             print("Action invalide. Veuillez réessayer.")
             return False
-        
+
     def bets_balanced(self):
         active_players = [p for p in self.players if p.is_active]
         contributions = [self.current_bets[p.name] for p in active_players]
